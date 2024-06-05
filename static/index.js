@@ -1,6 +1,8 @@
 const searchElement = document.getElementById('searchbar');
 const urlInput = document.getElementById('address');
 
+
+
 if (searchElement && urlInput) {
   searchElement.addEventListener('submit', async (event) => {
     event.preventDefault();
@@ -14,7 +16,7 @@ if (searchElement && urlInput) {
 }
 
 function initializeServiceWorker() {
-  return window.navigator.serviceWorker.register('./sw.js', {
+  return window.navigator.serviceWorker.register('../sw.js', {
     scope: __uv$config.prefix,
   });
 }
