@@ -1,42 +1,57 @@
-body{
+body {
     background: linear-gradient(to right, #fbf460, #FFC107, #FF8A65);
-            
-            
-    color: rgb(255, 159, 6); 
+    color: rgb(255, 159, 6);
     font-family: 'Roboto', sans-serif;
     font-size: 16px;
-    
-    
-  }
+    height: 100vh;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
 
 
+#cred {
+   
+    position: fixed;
+      top: 10px;
+      font-family: Arial, Helvetica, sans-serif[];
+      font-size: 25px;
+
+}
+
+#Summer {
+    color: rgb(0, 0, 0);
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 50px;
+    position: absolute;
+    top: 30%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
 
 #address {
-    
     background: linear-gradient(to right, #fff75f, #FFC107, #FF8A65);
     color: rgb(0, 0, 0);
-    width: 100vh;
+    width: 60%;
     height: 5vh;
     border: solid;
     border-radius: 5px;
     cursor: pointer;
     transition: background-color 0.3s ease;
+    margin-top: 20px;
 }
 
-
-#Summer {
-    color: rgb(0, 0, 0);
-   font-family: Arial, Helvetica, sans-serif;
-   font-size: 50px;
-    position: absolute;
-    top: calc(50% - 150px); 
-    left: 50%; 
-    transform: translateX(-50%); 
-
-}
 #searchbar {
-    text-align: center;
-    padding: 20px;
-    margin-top: 250px;
-
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 20px;
+    position: absolute;
+    top: calc(50% + 10px);
+    left: 50%;
+    transform: translateX(-50%);
 }
