@@ -30,7 +30,7 @@ app.get('/apps/', (req, res) => {
 
 const routes = [
     { path: '/~', file: 'apps.html' },
-    { path: '/courses', file: 'pxy.html'},
+    // { path: '/courses', file: 'pxy.html'},
     { path: '/0', file: 'tabs.html' },
     { path: '/1', file: 'go.html' },
     { path: '/', file: 'index.html' },
