@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Summer chat</title>
+    <link rel="stylesheet" href="./css/chat.css"> <!-- Link to your CSS file -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const socket = io();
+            let userName = localStorage.getItem('userName');
+            let isAdmin = false; // Track if the user is an admin
+    
+            if (!userName) {
+                userName = prompt('Please enter your name:');
+                if (userName) {
+                    localStorage.setItem('userName', userName);
+                } else {
+                    userName = 'Anonymous'; // Default name if user cancels prompt
+                }
+            }
+    
+            const form = document.getElementById('form');
+            const input = document.getElementById('input');
+            const messages = document.getElementById('messages');
+    
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const message = input.value.trim();
+    
+                if (message) {
+                    if (message.startsWith('/login')) {
+                        // Example format: /login username password
+                        const parts = message.split(' ');
+                        const enteredUsername = parts[1];
+                        const enteredPassword = parts[2];
+    
+                        // Replace with your actual admin username and password
+                        const adminUsername = 'cxin';
+                        const adminPassword = 'darwin2023';
+    
+                        if (enteredUsername === adminUsername && enteredPassword === adminPassword) {
+                            isAdmin = true;
+                            userName = '[Owner] cxin';
+                            socket.emit('chat message', { userName, message: 'has logged in as Admin.' });
+                        } else {
+                            alert('Invalid username or password.');
+                        }
+                    } else if (message === '/clear' && isAdmin) {
+                        // Only clear the chat if the user is an admin
+                        messages.innerHTML = '';
+                        socket.emit('chat message', { userName, message: 'cleared the chat.' });
+                    } else {
+                        socket.emit('chat message', { userName, message });
+                    }
+                    input.value = '';
+                }
+            });
+    
+            socket.on('chat message', (data) => {
+                const item = document.createElement('li');
+                item.textContent = `${data.userName}: ${data.message}`;
+                messages.appendChild(item);
+                messages.scrollTop = messages.scrollHeight; // Automatically scroll down
+            });
+        });
+    </script>
+    
+    
+    
+</head>
+<body>
+   
+    <div id="Summer">Summer Chat</div>
+    <ul id="messages"></ul>
+    <form id="form" action="">
+        <input id="input" autocomplete="off" /><button>Send</button>
+    </form>
+</body>
+</html>

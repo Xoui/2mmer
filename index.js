@@ -2,15 +2,10 @@ import express from 'express';
 import { createBareServer } from '@tomphttp/bare-server-node';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
-import { createServer as createHttpServer} from 'http';
-import { readFileSync, existsSync, } from 'fs';
-import path from 'path'; 
-
-
-
-var server = createHttpServer((req, res) => {
-    
-  });
+import path from 'path';
+import { createServer as createHttpServer } from 'http';
+import { createServer as createHttpsServer } from 'https';
+import { Server as SocketIOServer } from 'socket.io'; // Import Socket.IO
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -19,21 +14,16 @@ const app = express();
 const PORT = process.env.PORT || 8080;
 const bare = createBareServer("/bare/");
 
-
-
+// Serve static files
 app.use(express.static(path.join(__dirname, 'static')));
 
-
-app.get('/apps/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'static', 'apps.html'));
-});
-
+// Define routes
 const routes = [
     { path: '/~', file: 'apps.html' },
-    // { path: '/courses', file: 'pxy.html'},
     { path: '/0', file: 'tabs.html' },
     { path: '/1', file: 'go.html' },
     { path: '/', file: 'index.html' },
+    { path: '/chat', file: 'chat.html' },
 ];
 
 routes.forEach((route) => {
@@ -42,17 +32,34 @@ routes.forEach((route) => {
     });
 });
 
-
-if (existsSync(path.join(__dirname, 'key.pem')) && existsSync(path.join(__dirname, 'cert.pem'))) {
+let server;
+if (fs.existsSync(path.join(__dirname, 'key.pem')) && fs.existsSync(path.join(__dirname, 'cert.pem'))) {
     const options = {
-        key: readFileSync(path.join(__dirname, 'key.pem')),
-        cert: readFileSync(path.join(__dirname, 'cert.pem'))
+        key: fs.readFileSync(path.join(__dirname, 'key.pem')),
+        cert: fs.readFileSync(path.join(__dirname, 'cert.pem')),
     };
     server = createHttpsServer(options, app);
 } else {
     server = createHttpServer(app);
 }
 
+// Initialize socket.io server
+const io = new SocketIOServer(server);
+
+// Handle socket.io connections
+io.on('connection', (socket) => {
+    console.log('A user connected');
+
+    socket.on('chat message', (msg) => {
+        io.emit('chat message', msg); // Broadcast message to all clients
+    });
+
+    socket.on('disconnect', () => {
+        console.log('User disconnected');
+    });
+});
+
+// Middleware for bare server
 app.use((req, res, next) => {
     if (bare.shouldRoute(req)) {
         bare.routeRequest(req, res);
@@ -61,6 +68,7 @@ app.use((req, res, next) => {
     }
 });
 
+// Handle WebSocket upgrade requests
 server.on('upgrade', (req, socket, head) => {
     if (bare.shouldRoute(req, socket, head)) {
         bare.routeUpgrade(req, socket, head);
