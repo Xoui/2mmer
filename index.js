@@ -46,12 +46,27 @@ if (fs.existsSync(path.join(__dirname, 'key.pem')) && fs.existsSync(path.join(__
 // Initialize socket.io server
 const io = new SocketIOServer(server);
 
+// Array to store chat history
+let chatHistory = [];
+
 // Handle socket.io connections
 io.on('connection', (socket) => {
     console.log('A user connected');
 
+    // Send existing chat history to the newly connected user
+    socket.emit('chat history', chatHistory);
+
     socket.on('chat message', (msg) => {
-        io.emit('chat message', msg); // Broadcast message to all clients
+        // Save message to chat history
+        chatHistory.push(msg);
+
+        // Limit chat history to the last 100 messages to avoid excessive memory usage
+        if (chatHistory.length > 100) {
+            chatHistory.shift(); // Remove the oldest message
+        }
+
+        // Broadcast the message to all clients
+        io.emit('chat message', msg);
     });
 
     socket.on('disconnect', () => {

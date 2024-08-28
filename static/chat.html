@@ -23,6 +23,20 @@
             const input = document.getElementById('input');
             const messages = document.getElementById('messages');
     
+            // Receive chat history from server
+            socket.on('chat history', (history) => {
+                history.forEach((data) => {
+                    const item = document.createElement('li');
+                    if (data.isAdmin) {
+                        item.innerHTML = `<span class="admin-name">${data.userName}</span>: ${data.message}`;
+                    } else {
+                        item.textContent = `${data.userName}: ${data.message}`;
+                    }
+                    messages.appendChild(item);
+                });
+                messages.scrollTop = messages.scrollHeight; // Automatically scroll down to the latest message
+            });
+    
             form.addEventListener('submit', (e) => {
                 e.preventDefault();
                 const message = input.value.trim();
@@ -41,16 +55,16 @@
                         if (enteredUsername === adminUsername && enteredPassword === adminPassword) {
                             isAdmin = true;
                             userName = '[Owner] cxin';
-                            socket.emit('chat message', { userName, message: 'has logged in as Admin.' });
+                            socket.emit('chat message', { userName, message: 'has joined the chat.', isAdmin });
                         } else {
                             alert('Invalid username or password.');
                         }
                     } else if (message === '/clear' && isAdmin) {
                         // Only clear the chat if the user is an admin
                         messages.innerHTML = '';
-                        socket.emit('chat message', { userName, message: 'cleared the chat.' });
+                        socket.emit('chat message', { userName, message: 'cleared the chat.', isAdmin });
                     } else {
-                        socket.emit('chat message', { userName, message });
+                        socket.emit('chat message', { userName, message, isAdmin });
                     }
                     input.value = '';
                 }
@@ -58,12 +72,17 @@
     
             socket.on('chat message', (data) => {
                 const item = document.createElement('li');
-                item.textContent = `${data.userName}: ${data.message}`;
+                if (data.isAdmin) {
+                    item.innerHTML = `<span class="admin-name">${data.userName}</span>: ${data.message}`;
+                } else {
+                    item.textContent = `${data.userName}: ${data.message}`;
+                }
                 messages.appendChild(item);
                 messages.scrollTop = messages.scrollHeight; // Automatically scroll down
             });
         });
     </script>
+
     
     
     
