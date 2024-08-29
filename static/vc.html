@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Rooms</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.peerjs.com/1.0.0/peer.min.js"></script>
+</head>
+<body>
+    <h1>Voice Rooms</h1>
+    <input id="room" type="text" placeholder="Enter room name">
+    <button id="join">Join Room</button>
+    <audio id="remoteAudio" autoplay></audio>
+
+    <script>
+        const socket = io();
+        const roomInput = document.getElementById('room');
+        const joinButton = document.getElementById('join');
+        const remoteAudio = document.getElementById('remoteAudio');
+
+        let peer;
+        let localStream;
+
+        joinButton.addEventListener('click', () => {
+            const room = roomInput.value;
+            if (room) {
+                socket.emit('joinRoom', room);
+
+                // Initialize PeerJS
+                peer = new Peer(undefined, { host: 'localhost', port: 9000, path: '/' });
+
+                peer.on('open', id => {
+                    console.log(`My peer ID is ${id}`);
+                });
+
+                peer.on('call', call => {
+                    call.answer(localStream);
+                    call.on('stream', stream => {
+                        remoteAudio.srcObject = stream;
+                    });
+                });
+
+                socket.on('offer', (offer) => {
+                    peer.signal(offer);
+                });
+
+                socket.on('answer', (answer) => {
+                    peer.signal(answer);
+                });
+
+                socket.on('ice-candidate', (candidate) => {
+                    peer.signal(candidate);
+                });
+
+                navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+                    localStream = stream;
+                });
+            }
+        });
+
+        // Handle outgoing calls
+        peer.on('call', call => {
+            call.answer(localStream);
+            call.on('stream', stream => {
+                remoteAudio.srcObject = stream;
+            });
+        });
+    </script>
+</body>
+</html>

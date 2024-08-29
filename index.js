@@ -5,7 +5,7 @@ import fs from 'fs';
 import path from 'path';
 import { createServer as createHttpServer } from 'http';
 import { createServer as createHttpsServer } from 'https';
-import { Server as SocketIOServer } from 'socket.io'; // Import Socket.IO
+import { Server as SocketIOServer } from 'socket.io';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -13,6 +13,14 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 8080;
 const bare = createBareServer("/bare/");
+const server = fs.existsSync(path.join(__dirname, 'key.pem')) && fs.existsSync(path.join(__dirname, 'cert.pem'))
+    ? createHttpsServer({
+        key: fs.readFileSync(path.join(__dirname, 'key.pem')),
+        cert: fs.readFileSync(path.join(__dirname, 'cert.pem'))
+      }, app)
+    : createHttpServer(app);
+
+const io = new SocketIOServer(server);
 
 // Serve static files
 app.use(express.static(path.join(__dirname, 'static')));
@@ -24,6 +32,8 @@ const routes = [
     { path: '/1', file: 'go.html' },
     { path: '/', file: 'index.html' },
     { path: '/chat', file: 'chat.html' },
+    { path: '/voice', file: 'voice.html' },
+    { path: '/voice-rooms', file: 'voice_rooms.html' },
 ];
 
 routes.forEach((route) => {
@@ -32,41 +42,25 @@ routes.forEach((route) => {
     });
 });
 
-let server;
-if (fs.existsSync(path.join(__dirname, 'key.pem')) && fs.existsSync(path.join(__dirname, 'cert.pem'))) {
-    const options = {
-        key: fs.readFileSync(path.join(__dirname, 'key.pem')),
-        cert: fs.readFileSync(path.join(__dirname, 'cert.pem')),
-    };
-    server = createHttpsServer(options, app);
-} else {
-    server = createHttpServer(app);
-}
-
-// Initialize socket.io server
-const io = new SocketIOServer(server);
-
-// Array to store chat history
-let chatHistory = [];
-
-// Handle socket.io connections
+// WebSocket communication
 io.on('connection', (socket) => {
     console.log('A user connected');
 
-    // Send existing chat history to the newly connected user
-    socket.emit('chat history', chatHistory);
+    socket.on('joinRoom', (room) => {
+        socket.join(room);
+        console.log(`User joined room: ${room}`);
+    });
 
-    socket.on('chat message', (msg) => {
-        // Save message to chat history
-        chatHistory.push(msg);
+    socket.on('offer', (data) => {
+        io.to(data.room).emit('offer', data.offer);
+    });
 
-        // Limit chat history to the last 100 messages to avoid excessive memory usage
-        if (chatHistory.length > 100) {
-            chatHistory.shift(); // Remove the oldest message
-        }
+    socket.on('answer', (data) => {
+        io.to(data.room).emit('answer', data.answer);
+    });
 
-        // Broadcast the message to all clients
-        io.emit('chat message', msg);
+    socket.on('ice-candidate', (data) => {
+        io.to(data.room).emit('ice-candidate', data.candidate);
     });
 
     socket.on('disconnect', () => {
@@ -94,9 +88,7 @@ server.on('upgrade', (req, socket, head) => {
 
 server.listen(PORT, () => {
     const addr = server.address();
-    console.log(`Summer running on port ${addr.port}`);
-    console.log('');
-    console.log('You can now view it in your browser.');
+    console.log(`Server running on port ${addr.port}`);
     console.log(`Local: http://${addr.family === 'IPv6' ? `[${addr.address}]` : addr.address}:${addr.port}`);
     try { console.log(`On Your Network: http://${address.ip()}:${addr.port}`); } catch (err) { /* Can't find LAN interface */ }
     if (process.env.REPL_SLUG && process.env.REPL_OWNER) {

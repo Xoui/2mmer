@@ -1,0 +1,65 @@
+body {
+    font-family: Arial, sans-serif;
+    background: linear-gradient(to right, #ff7e5f, #feb47b);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    color: #fff;
+    text-align: center;
+}
+
+h1 {
+    margin-bottom: 20px;
+}
+
+input, button {
+    padding: 10px;
+    margin: 5px 0;
+    border-radius: 5px;
+    border: none;
+    outline: none;
+    width: 100%;
+    max-width: 300px;
+    box-sizing: border-box;
+}
+
+button {
+    background-color: #ff6b6b;
+    color: #fff;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #ff3f3f;
+}
+
+#currentChannel.hidden {
+    display: none;
+}
+
+#participantsList {
+    margin: 20px 0;
+}
+
+#participantsList ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+#participantsList li {
+    background-color: #ff6b6b;
+    margin: 5px 0;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+#voice-chat {
+    margin-top: 20px;
+}
+
+#muteButton.hidden, #unmuteButton.hidden {
+    display: none;
+}
